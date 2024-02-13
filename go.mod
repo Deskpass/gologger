@@ -1,4 +1,4 @@
-module github.com/deskpass/go-logger
+module github.com/deskpass/gologger
 
 go 1.20
 

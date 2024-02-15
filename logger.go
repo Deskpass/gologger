@@ -22,6 +22,13 @@ type Logger struct {
 	remoteLoggerFns map[string]func() *zerolog.Event
 }
 
+var validLogLevels = map[string]zerolog.Level{
+	"debug": zerolog.DebugLevel,
+	"info":  zerolog.InfoLevel,
+	"warn":  zerolog.WarnLevel,
+	"error": zerolog.ErrorLevel,
+}
+
 // Define basic logging functions for each log level, all of which just call
 // commonLog with the appropriate level
 func (l *Logger) Debug(message string, meta map[string]interface{}) {
@@ -92,6 +99,24 @@ func ConfigureLogger(appName string, remoteLoggerURL string, environment string)
 	// Set up local logger for starters
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMicro
 
+	// Set logger level based on specific level env var or based on environment
+	logLevel := "info"
+
+	if os.Getenv("LOG_LEVEL") != "" {
+		if _, exists := validLogLevels[os.Getenv("LOG_LEVEL")]; exists {
+			logLevel = os.Getenv("LOG_LEVEL")
+		} else {
+			fmt.Println("Invalid log level specified:", os.Getenv("LOG_LEVEL"))
+		}
+	} else {
+		if environment == "development" {
+			logLevel = "debug"
+		}
+	}
+
+	zerolog.SetGlobalLevel(validLogLevels[logLevel])
+
+	// Then set up the local logger for printing to stdout
 	localLogger := zerolog.New(os.Stdout).With().Timestamp().Str("app", appName).Logger()
 
 	// Make logging output a bit easier to read in development

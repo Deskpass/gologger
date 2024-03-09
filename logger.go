@@ -174,28 +174,14 @@ func ConfigureLogger(appName string, remoteLoggerURL string, environment string)
 	return &combinedLogger
 }
 
-// Helper function to build a zerolog Dict from a map of metadata. This is used to
-// add metadata to log messages. Will handle common types (string, int, float64,
-// bool) but won't handle everything. Feel free to add more types as needed.
+// Helper function to just flip through meta values and build a Dict from the
+// values. This is used to add metadata to log messages.
 func buildDictFromMeta(meta *map[string]interface{}, logger *Logger) *zerolog.Event {
 	// Flip through meta fields, building Dict that can be passed to logger
 	loggerDict := zerolog.Dict()
 
 	for key, value := range *meta {
-		// Get type of value
-		valueType := fmt.Sprintf("%T", value)
-
-		if valueType == "string" {
-			loggerDict = loggerDict.Str(key, value.(string))
-		} else if valueType == "int" {
-			loggerDict = loggerDict.Int(key, value.(int))
-		} else if valueType == "float64" {
-			loggerDict = loggerDict.Float64(key, value.(float64))
-		} else if valueType == "bool" {
-			loggerDict = loggerDict.Bool(key, value.(bool))
-		} else {
-			logger.Error(fmt.Sprintf("Unable to handle type %s for key %s", valueType, key), nil, nil)
-		}
+		loggerDict.Any(key, value)
 	}
 
 	return loggerDict
